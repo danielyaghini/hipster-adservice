@@ -12,7 +12,7 @@ on:
 
 env:
   # TODO: Change variable to your image's name.
-  IMAGE_NAME: adservice
+  IMAGE_NAME: ""
   Dockerfile: Dockerfile
 jobs:
   # Run tests.
@@ -43,13 +43,16 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Build image
-        run: docker build . --file $Dockerfile --tag $IMAGE_NAME
+        run: |
+          [ "$IMAGE_NAME" == "" ] && IMAGE_NAME=$(echo "${{ github.repository }}" | sed -e 's,.*/\(.*\),\1,')
+          docker build . --file $Dockerfile --tag $IMAGE_NAME
 
       - name: Log into registry
         run: echo "${{ secrets.PACHAGE_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
       - name: Push image
         run: |
+          [ "$IMAGE_NAME" == "" ] && IMAGE_NAME=$(echo "${{ github.repository }}" | sed -e 's,.*/\(.*\),\1,')
           IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
 
           # Strip git ref prefix from version
